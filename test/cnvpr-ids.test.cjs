@@ -59,3 +59,17 @@ test('p:cNvPr/@id values stay unique on later slides and with mixed object order
 	const xml = await slideXml(pptx, 'ppt/slides/slide2.xml')
 	assertUniqueCnvPrIds(extractCnvPrIds(xml), 'slide2 table+text+shape')
 })
+
+test('p:cNvPr/@id values stay unique when a slide has media between text shapes', async () => {
+	const PptxGenJS = loadPptxGenJS()
+	const pptx = new PptxGenJS()
+	const slide = pptx.addSlide()
+	slide.addText('One', { x: 0.5, y: 0.5, w: 4, h: 0.5 })
+	slide.addText('Two', { x: 0.5, y: 1.5, w: 4, h: 0.5 })
+	slide.addMedia({ type: 'online', link: 'https://www.youtube.com/embed/Dph6ynRVyUc', x: 5, y: 0.5, w: 4, h: 2.25 })
+	slide.addText('Three', { x: 0.5, y: 2.5, w: 4, h: 0.5 })
+
+	const xml = await slideXml(pptx, 'ppt/slides/slide1.xml')
+	const ids = extractCnvPrIds(xml)
+	assert.equal(new Set(ids).size, ids.length, `duplicate p:cNvPr/@id [${ids.join(', ')}]`)
+})
